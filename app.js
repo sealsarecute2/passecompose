@@ -24,11 +24,19 @@ document.addEventListener("DOMContentLoaded", () => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "fr-CA";
-      utterance.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const caVoice = voices.find(v => v.lang === "fr-CA" || v.lang.replace("_", "-") === "fr-CA");
+      const frVoice = voices.find(v => v.lang && v.lang.startsWith("fr"));
+      if (caVoice) utterance.voice = caVoice;
+      else if (frVoice) utterance.voice = frVoice;
+      utterance.rate = 0.92;
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn("Speech synthesis error:", e);
     }
+  }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
   }
 
   // --- Navigation Tabs ---
@@ -598,6 +606,156 @@ document.addEventListener("DOMContentLoaded", () => {
       quizInput.setSelectionRange(start + char.length, start + char.length);
     });
   });
+
+  // --- MODE 5: SPEED BLITZ CHALLENGE (60s) ---
+  const BLITZ_STORAGE_KEY = "mesVerbesBlitzHighScore";
+  let blitzHighScore = parseInt(localStorage.getItem(BLITZ_STORAGE_KEY) || "0", 10);
+  let blitzScore = 0;
+  let blitzStreak = 0;
+  let blitzTimeLeft = 60;
+  let blitzTimerId = null;
+
+  const blitzTimerEl = document.getElementById("blitz-timer");
+  const blitzScoreEl = document.getElementById("blitz-score");
+  const blitzStreakEl = document.getElementById("blitz-streak");
+  const blitzHighScoreEl = document.getElementById("blitz-highscore");
+  const blitzTimerBar = document.getElementById("blitz-timer-bar");
+  const blitzStartScreen = document.getElementById("blitz-start-screen");
+  const blitzActiveScreen = document.getElementById("blitz-active-screen");
+  const blitzSummary = document.getElementById("blitz-summary");
+  const blitzStartBtn = document.getElementById("blitz-start-btn");
+  const blitzPlayAgainBtn = document.getElementById("blitz-play-again");
+  const blitzOptionsEl = document.getElementById("blitz-options");
+  const blitzPromptEl = document.getElementById("blitz-prompt");
+  const blitzHintEl = document.getElementById("blitz-hint");
+  const blitzFinalScoreEl = document.getElementById("blitz-final-score");
+  const blitzSummaryMsgEl = document.getElementById("blitz-summary-msg");
+  const blitzRecordBadge = document.getElementById("blitz-record-badge");
+
+  if (blitzHighScoreEl) blitzHighScoreEl.textContent = blitzHighScore;
+  if (blitzStartBtn) blitzStartBtn.addEventListener("click", startBlitzGame);
+  if (blitzPlayAgainBtn) blitzPlayAgainBtn.addEventListener("click", startBlitzGame);
+
+  function startBlitzGame() {
+    blitzScore = 0;
+    blitzStreak = 0;
+    blitzTimeLeft = 60;
+    if (blitzScoreEl) blitzScoreEl.textContent = "0";
+    if (blitzStreakEl) blitzStreakEl.textContent = "0";
+    if (blitzTimerEl) blitzTimerEl.textContent = "60s";
+    if (blitzTimerBar) blitzTimerBar.style.width = "100%";
+
+    if (blitzStartScreen) blitzStartScreen.classList.add("hidden");
+    if (blitzSummary) blitzSummary.classList.add("hidden");
+    if (blitzActiveScreen) blitzActiveScreen.classList.remove("hidden");
+
+    clearInterval(blitzTimerId);
+    blitzTimerId = setInterval(blitzTick, 1000);
+
+    nextBlitzQuestion();
+  }
+
+  function blitzTick() {
+    blitzTimeLeft--;
+    if (blitzTimerEl) blitzTimerEl.textContent = `${blitzTimeLeft}s`;
+    const pct = Math.max(0, (blitzTimeLeft / 60) * 100);
+    if (blitzTimerBar) blitzTimerBar.style.width = `${pct}%`;
+
+    if (blitzTimeLeft <= 0) {
+      endBlitzGame();
+    }
+  }
+
+  function endBlitzGame() {
+    clearInterval(blitzTimerId);
+    if (blitzActiveScreen) blitzActiveScreen.classList.add("hidden");
+    if (blitzSummary) blitzSummary.classList.remove("hidden");
+    if (blitzFinalScoreEl) blitzFinalScoreEl.textContent = blitzScore;
+
+    let isNewHigh = false;
+    if (blitzScore > blitzHighScore) {
+      blitzHighScore = blitzScore;
+      localStorage.setItem(BLITZ_STORAGE_KEY, blitzHighScore.toString());
+      if (blitzHighScoreEl) blitzHighScoreEl.textContent = blitzHighScore;
+      isNewHigh = true;
+    }
+
+    if (blitzRecordBadge) blitzRecordBadge.classList.toggle("hidden", !isNewHigh);
+
+    if (blitzSummaryMsgEl) {
+      if (blitzScore >= 25) {
+        blitzSummaryMsgEl.textContent = "⚡ Fantastique! Vitesse olympique digne du Tour de France! 🚲🥖";
+      } else if (blitzScore >= 15) {
+        blitzSummaryMsgEl.textContent = "Bravo! Excellents réflexes sur le passé composé!";
+      } else if (blitzScore >= 8) {
+        blitzSummaryMsgEl.textContent = "Bon travail! Continue de pratiquer pour booster ta vitesse.";
+      } else {
+        blitzSummaryMsgEl.textContent = "Bon premier essai! Révise les leçons et réessaie pour battre ton score.";
+      }
+    }
+  }
+
+  function nextBlitzQuestion() {
+    const v = randomItem(VERBS);
+    const s = v.impersonal ? SUBJECTS[4] : randomItem(SUBJECTS);
+
+    const correct = conjugatePasséComposé(v, s);
+    const subjLabel = v.impersonal ? "Il (impersonnel)" : s.label;
+    if (blitzPromptEl) blitzPromptEl.textContent = `${subjLabel} + ${formatVerbTitle(v)}`;
+    if (blitzHintEl) blitzHintEl.textContent = `${v.english} • (${v.aux === "etre" ? "être" : "avoir"})`;
+
+    const pool = new Set();
+    if (v.reflexive) {
+      pool.add(`${s.reflEtre} ${v.pp}`);
+      pool.add(`${s.reflEtre} ${v.pp}e`);
+      pool.add(`${s.reflEtre} ${v.pp}es`);
+      pool.add(`${s.avoir} ${v.pp}`);
+      pool.add(`${s.etre} ${getAgreedParticiple(v, s.fem, s.plural)}`);
+    } else if (v.aux === "etre") {
+      pool.add(`${s.etre} ${v.pp}`);
+      pool.add(`${s.etre} ${v.pp}e`);
+      pool.add(`${s.etre} ${v.pp}s`);
+      pool.add(`${s.etre} ${v.pp}es`);
+      pool.add(`${s.avoir} ${v.pp}`);
+    } else {
+      pool.add(`${s.avoir} ${v.pp}e`);
+      pool.add(`${s.avoir} ${v.pp}s`);
+      pool.add(`${s.avoir} ${v.pp}es`);
+      pool.add(`${s.etre} ${v.pp}${s.fem ? "e" : ""}${s.plural ? "s" : ""}`);
+    }
+    pool.delete(correct);
+
+    const choices = [correct, ...[...pool].slice(0, 3)].sort(() => Math.random() - 0.5);
+
+    if (blitzOptionsEl) {
+      blitzOptionsEl.innerHTML = choices.map(opt => `
+        <button class="blitz-choice-btn">${opt}</button>
+      `).join("");
+
+      blitzOptionsEl.querySelectorAll(".blitz-choice-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          blitzOptionsEl.querySelectorAll(".blitz-choice-btn").forEach(b => b.disabled = true);
+          if (btn.textContent === correct) {
+            blitzScore++;
+            blitzStreak++;
+            btn.classList.add("flash-correct");
+          } else {
+            blitzStreak = 0;
+            btn.classList.add("flash-wrong");
+            blitzOptionsEl.querySelectorAll(".blitz-choice-btn").forEach(b => {
+              if (b.textContent === correct) b.classList.add("flash-correct");
+            });
+          }
+          if (blitzScoreEl) blitzScoreEl.textContent = blitzScore;
+          if (blitzStreakEl) blitzStreakEl.textContent = blitzStreak;
+
+          setTimeout(() => {
+            if (blitzTimeLeft > 0) nextBlitzQuestion();
+          }, 200);
+        });
+      });
+    }
+  }
 
   // --- Initialize App ---
   updateProgressUI();
