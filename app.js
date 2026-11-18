@@ -1,4 +1,4 @@
-bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"></head><body>document.addEventListener("DOMContentLoaded", () =&gt; {
+document.addEventListener("DOMContentLoaded", () => {
   const STORAGE_KEY = "mesVerbesMastered_v1";
   let masteredIds = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
 
@@ -17,22 +17,36 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     saveMastery();
   }
 
+  // --- Audio Pronunciation (Text-to-Speech) ---
+  function speakFrench(text) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "fr-CA";
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("Speech synthesis error:", e);
+    }
+  }
+
   // --- Navigation Tabs ---
   const navButtons = document.querySelectorAll(".nav-btn");
   const tabPanels = document.querySelectorAll(".tab-panel");
 
   function switchTab(tabName) {
-    navButtons.forEach(btn =&gt; btn.classList.toggle("active", btn.dataset.tab === tabName));
-    tabPanels.forEach(panel =&gt; panel.classList.toggle("active", panel.id === `tab-${tabName}`));
+    navButtons.forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tabName));
+    tabPanels.forEach(panel => panel.classList.toggle("active", panel.id === `tab-${tabName}`));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  navButtons.forEach(btn =&gt; {
-    btn.addEventListener("click", () =&gt; switchTab(btn.dataset.tab));
+  navButtons.forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  document.querySelectorAll("[data-goto]").forEach(btn =&gt; {
-    btn.addEventListener("click", () =&gt; switchTab(btn.dataset.goto));
+  document.querySelectorAll("[data-goto]").forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.goto));
   });
 
   // --- Progress UI ---
@@ -44,32 +58,32 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     document.getElementById("mastery-bar").style.width = `${pct}%`;
   }
 
-  document.getElementById("reset-progress-btn").addEventListener("click", () =&gt; {
+  document.getElementById("reset-progress-btn").addEventListener("click", () => {
     if (confirm("Reset your saved mastery progress for all 50 verbs?")) {
       masteredIds.clear();
       saveMastery();
     }
   });
 
-  // --- 50 Verbs Grid &amp; Filters ---
+  // --- 50 Verbs Grid & Filters ---
   let activeFilter = "all";
   let searchQuery = "";
   const verbsGrid = document.getElementById("verbs-grid");
   const searchInput = document.getElementById("verb-search");
 
   function getBadgeHTML(verb) {
-    if (verb.reflexive) return `&lt;span class="pill pill-reflexive"&gt;Reflexive ‚Ä¢ √ätre&lt;/span&gt;`;
-    if (verb.aux === "etre") return `&lt;span class="pill pill-etre"&gt;√ätre&lt;/span&gt;`;
-    return `&lt;span class="pill pill-avoir"&gt;Avoir&lt;/span&gt;`;
+    if (verb.reflexive) return `<span class="pill pill-reflexive">Reflexive ‚Ä¢ √ätre</span>`;
+    if (verb.aux === "etre") return `<span class="pill pill-etre">√ätre</span>`;
+    return `<span class="pill pill-avoir">Avoir</span>`;
   }
 
   function renderVerbGrid() {
-    const filtered = VERBS.filter(v =&gt; {
-      if (activeFilter === "avoir" &amp;&amp; v.aux !== "avoir") return false;
-      if (activeFilter === "etre" &amp;&amp; (v.aux !== "etre" || v.reflexive)) return false;
-      if (activeFilter === "reflexive" &amp;&amp; !v.reflexive) return false;
-      if (activeFilter === "starred" &amp;&amp; !v.starred) return false;
-      if (activeFilter === "unmastered" &amp;&amp; masteredIds.has(v.id)) return false;
+    const filtered = VERBS.filter(v => {
+      if (activeFilter === "avoir" && v.aux !== "avoir") return false;
+      if (activeFilter === "etre" && (v.aux !== "etre" || v.reflexive)) return false;
+      if (activeFilter === "reflexive" && !v.reflexive) return false;
+      if (activeFilter === "starred" && !v.starred) return false;
+      if (activeFilter === "unmastered" && masteredIds.has(v.id)) return false;
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -83,46 +97,46 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     });
 
     if (filtered.length === 0) {
-      verbsGrid.innerHTML = `&lt;p&gt;No verbs match your search/filter.&lt;/p&gt;`;
+      verbsGrid.innerHTML = `<p>No verbs match your search/filter.</p>`;
       return;
     }
 
-    verbsGrid.innerHTML = filtered.map(v =&gt; {
+    verbsGrid.innerHTML = filtered.map(v => {
       const isMastered = masteredIds.has(v.id);
       return `
-        &lt;div class="verb-card ${isMastered ? "is-mastered" : ""}" data-verb-id="${v.id}"&gt;
-          &lt;div&gt;
-            &lt;div class="verb-card-top"&gt;
-              &lt;span class="verb-num"&gt;#${v.id}&lt;/span&gt;
-              &lt;div&gt;
-                ${v.starred ? `&lt;span class="pill pill-star"&gt;*&lt;/span&gt;` : ""}
+        <div class="verb-card ${isMastered ? "is-mastered" : ""}" data-verb-id="${v.id}">
+          <div>
+            <div class="verb-card-top">
+              <span class="verb-num">#${v.id}</span>
+              <div>
+                ${v.starred ? `<span class="pill pill-star">*</span>` : ""}
                 ${getBadgeHTML(v)}
-              &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;h3&gt;${formatVerbTitle(v)}&lt;/h3&gt;
-            &lt;p class="verb-eng"&gt;${v.english}&lt;/p&gt;
-          &lt;/div&gt;
-          &lt;div class="verb-pp-line"&gt;
-            &lt;span&gt;PP: &lt;strong&gt;${v.pp}&lt;/strong&gt;${v.aux === "etre" ? "(e)(s)" : ""}&lt;/span&gt;
-            &lt;span&gt;${isMastered ? "‚úÖ" : "‚Üí"}&lt;/span&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+              </div>
+            </div>
+            <h3>${formatVerbTitle(v)}</h3>
+            <p class="verb-eng">${v.english}</p>
+          </div>
+          <div class="verb-pp-line">
+            <span>PP: <strong>${v.pp}</strong>${v.aux === "etre" ? "(e)(s)" : ""}</span>
+            <span>${isMastered ? "‚úÖ" : "‚Üí"}</span>
+          </div>
+        </div>
       `;
     }).join("");
 
-    verbsGrid.querySelectorAll(".verb-card").forEach(card =&gt; {
-      card.addEventListener("click", () =&gt; openVerbModal(Number(card.dataset.verbId)));
+    verbsGrid.querySelectorAll(".verb-card").forEach(card => {
+      card.addEventListener("click", () => openVerbModal(Number(card.dataset.verbId)));
     });
   }
 
-  searchInput.addEventListener("input", e =&gt; {
+  searchInput.addEventListener("input", e => {
     searchQuery = e.target.value.trim();
     renderVerbGrid();
   });
 
-  document.querySelectorAll(".filter-btn").forEach(btn =&gt; {
-    btn.addEventListener("click", () =&gt; {
-      document.querySelectorAll(".filter-btn").forEach(b =&gt; b.classList.remove("active"));
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activeFilter = btn.dataset.filter;
       renderVerbGrid();
@@ -134,14 +148,14 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
   let currentModalVerbId = null;
 
   function openVerbModal(verbId) {
-    const v = VERBS.find(item =&gt; item.id === verbId);
+    const v = VERBS.find(item => item.id === verbId);
     if (!v) return;
     currentModalVerbId = v.id;
 
     document.getElementById("modal-badges").innerHTML = `
       ${getBadgeHTML(v)}
-      ${v.starred ? `&lt;span class="pill pill-star"&gt;Verbe √âtoil√© *&lt;/span&gt;` : ""}
-      ${v.impersonal ? `&lt;span class="pill pill-star"&gt;Impersonal (Il only)&lt;/span&gt;` : ""}
+      ${v.starred ? `<span class="pill pill-star">Verbe √âtoil√© *</span>` : ""}
+      ${v.impersonal ? `<span class="pill pill-star">Impersonal (Il only)</span>` : ""}
     `;
     document.getElementById("modal-title").textContent = formatVerbTitle(v);
     document.getElementById("modal-english").textContent = v.english;
@@ -159,7 +173,7 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
 
     const tbody = document.getElementById("modal-conj-tbody");
     if (v.impersonal) {
-      tbody.innerHTML = `&lt;tr&gt;&lt;td&gt;Il (impersonnel)&lt;/td&gt;&lt;td&gt;&lt;strong&gt;Il a ${v.pp}&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;`;
+      tbody.innerHTML = `<tr><td>Il (impersonnel)</td><td><strong>Il a ${v.pp}</strong></td></tr>`;
     } else {
       const modalRows = [
         { label: "Je", forms: v.aux === "etre" ? `${conjugatePass√©Compos√©(v, SUBJECTS[0])} (e)` : conjugatePass√©Compos√©(v, SUBJECTS[0]) },
@@ -171,15 +185,30 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
         { label: "Ils", forms: conjugatePass√©Compos√©(v, SUBJECTS[9]) },
         { label: "Elles", forms: conjugatePass√©Compos√©(v, SUBJECTS[10]) }
       ];
-      tbody.innerHTML = modalRows.map(r =&gt; `&lt;tr&gt;&lt;td&gt;${r.label}&lt;/td&gt;&lt;td&gt;&lt;strong&gt;${r.forms}&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;`).join("");
+      tbody.innerHTML = modalRows.map(r => `<tr><td>${r.label}</td><td><strong>${r.forms}</strong></td></tr>`).join("");
     }
 
     document.getElementById("modal-ex-fr").textContent = v.exFr;
     document.getElementById("modal-ex-en").textContent = v.exEn;
-    updateModalMasterBtn();
 
+    const listenBtn = document.getElementById("modal-listen-btn");
+    if (listenBtn) {
+      listenBtn.onclick = (e) => {
+        e.stopPropagation();
+        speakFrench(`${v.infinitive}. Participe pass√© : ${v.pp}`);
+      };
+    }
+    const speakExBtn = document.getElementById("modal-speak-ex-btn");
+    if (speakExBtn) {
+      speakExBtn.onclick = (e) => {
+        e.stopPropagation();
+        speakFrench(v.exFr);
+      };
+    }
+
+    updateModalMasterBtn();
     modal.classList.remove("hidden");
-  }
+    }
 
   function updateModalMasterBtn() {
     const btn = document.getElementById("modal-master-btn");
@@ -187,7 +216,7 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     btn.textContent = mastered ? "‚úÖ Mastered (Click to Unmark)" : "‚≠ê Mark as Mastered";
   }
 
-  document.getElementById("modal-master-btn").addEventListener("click", () =&gt; {
+  document.getElementById("modal-master-btn").addEventListener("click", () => {
     if (currentModalVerbId !== null) {
       toggleMastered(currentModalVerbId);
       updateModalMasterBtn();
@@ -195,11 +224,11 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     }
   });
 
-  document.getElementById("modal-close").addEventListener("click", () =&gt; modal.classList.add("hidden"));
-  modal.addEventListener("click", e =&gt; {
+  document.getElementById("modal-close").addEventListener("click", () => modal.classList.add("hidden"));
+  modal.addEventListener("click", e => {
     if (e.target === modal) modal.classList.add("hidden");
   });
-  document.addEventListener("keydown", e =&gt; {
+  document.addEventListener("keydown", e => {
     if (e.key === "Escape") modal.classList.add("hidden");
   });
 
@@ -207,10 +236,10 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
   const modeBtns = document.querySelectorAll(".mode-btn");
   const practicePanels = document.querySelectorAll(".practice-panel");
 
-  modeBtns.forEach(btn =&gt; {
-    btn.addEventListener("click", () =&gt; {
-      modeBtns.forEach(b =&gt; b.classList.remove("active"));
-      practicePanels.forEach(p =&gt; p.classList.remove("active"));
+  modeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modeBtns.forEach(b => b.classList.remove("active"));
+      practicePanels.forEach(p => p.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(`mode-${btn.dataset.mode}`).classList.add("active");
     });
@@ -229,9 +258,9 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
 
   function buildFlashcardDeck() {
     const mode = deckSelect.value;
-    if (mode === "etre-all") fcDeck = VERBS.filter(v =&gt; v.aux === "etre");
-    else if (mode === "starred") fcDeck = VERBS.filter(v =&gt; v.starred);
-    else if (mode === "unmastered") fcDeck = VERBS.filter(v =&gt; !masteredIds.has(v.id));
+    if (mode === "etre-all") fcDeck = VERBS.filter(v => v.aux === "etre");
+    else if (mode === "starred") fcDeck = VERBS.filter(v => v.starred);
+    else if (mode === "unmastered") fcDeck = VERBS.filter(v => !masteredIds.has(v.id));
     else fcDeck = [...VERBS];
 
     if (fcDeck.length === 0) fcDeck = [...VERBS];
@@ -256,8 +285,17 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     auxBadge.textContent = v.reflexive ? "Reflexive ‚Ä¢ √ätre" : v.aux === "etre" ? "√ätre" : "Avoir";
 
     document.getElementById("fc-answer").textContent = conjugatePass√©Compos√©(v, fcCurrentSubj);
-    document.getElementById("fc-meaning").innerHTML = `${v.english} ‚Ä¢ past participle: &lt;strong&gt;${v.pp}&lt;/strong&gt;`;
+    document.getElementById("fc-meaning").innerHTML = `${v.english} ‚Ä¢ past participle: <strong>${v.pp}</strong>`;
     document.getElementById("fc-example").textContent = v.exFr;
+
+    const fcListenBtn = document.getElementById("fc-listen-btn");
+    if (fcListenBtn) {
+      fcListenBtn.onclick = (e) => {
+        e.stopPropagation();
+        speakFrench(`${conjugatePass√©Compos√©(v, fcCurrentSubj)}. ${v.exFr}`);
+      };
+    }
+
     updateFlashcardMasterBtn();
   }
 
@@ -268,25 +306,25 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     btn.textContent = masteredIds.has(v.id) ? "‚úÖ Mastered" : "‚≠ê Mark Mastered";
   }
 
-  flashcardEl.addEventListener("click", () =&gt; flashcardEl.classList.toggle("flipped"));
-  flashcardEl.addEventListener("keydown", e =&gt; {
+  flashcardEl.addEventListener("click", () => flashcardEl.classList.toggle("flipped"));
+  flashcardEl.addEventListener("keydown", e => {
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
       flashcardEl.classList.toggle("flipped");
     }
   });
 
-  document.getElementById("fc-next").addEventListener("click", () =&gt; {
+  document.getElementById("fc-next").addEventListener("click", () => {
     fcIndex = (fcIndex + 1) % fcDeck.length;
     renderFlashcard();
   });
 
-  document.getElementById("fc-prev").addEventListener("click", () =&gt; {
+  document.getElementById("fc-prev").addEventListener("click", () => {
     fcIndex = (fcIndex - 1 + fcDeck.length) % fcDeck.length;
     renderFlashcard();
   });
 
-  document.getElementById("fc-toggle-master").addEventListener("click", () =&gt; {
+  document.getElementById("fc-toggle-master").addEventListener("click", () => {
     toggleMastered(fcDeck[fcIndex].id);
     updateFlashcardMasterBtn();
   });
@@ -302,9 +340,9 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
 
   function nextSorterQuestion() {
     // Weight √ätre/Reflexive slightly higher so students get good variety (40% √ätre, 60% Avoir)
-    const etrePool = VERBS.filter(v =&gt; v.aux === "etre");
-    const avoirPool = VERBS.filter(v =&gt; v.aux === "avoir");
-    sorterVerb = Math.random() &lt; 0.4 ? randomItem(etrePool) : randomItem(avoirPool);
+    const etrePool = VERBS.filter(v => v.aux === "etre");
+    const avoirPool = VERBS.filter(v => v.aux === "avoir");
+    sorterVerb = Math.random() < 0.4 ? randomItem(etrePool) : randomItem(avoirPool);
 
     document.getElementById("sorter-verb").textContent = formatVerbTitle(sorterVerb);
     document.getElementById("sorter-english").textContent = sorterVerb.english;
@@ -321,22 +359,22 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     const correct = choice === sorterVerb.aux;
     let reason = "";
     if (sorterVerb.reflexive) {
-      reason = `&lt;strong&gt;${sorterVerb.infinitive}&lt;/strong&gt; is a reflexive verb, so it ALWAYS takes &lt;strong&gt;√™tre&lt;/strong&gt;!`;
+      reason = `<strong>${sorterVerb.infinitive}</strong> is a reflexive verb, so it ALWAYS takes <strong>√™tre</strong>!`;
     } else if (sorterVerb.aux === "etre") {
-      reason = `&lt;strong&gt;${sorterVerb.infinitive}&lt;/strong&gt; is a DR &amp; MRS VANDERTRAMP verb, so it takes &lt;strong&gt;√™tre&lt;/strong&gt; (e.g., &lt;em&gt;Elle est ${sorterVerb.pp}e&lt;/em&gt;).`;
+      reason = `<strong>${sorterVerb.infinitive}</strong> is a DR & MRS VANDERTRAMP verb, so it takes <strong>√™tre</strong> (e.g., <em>Elle est ${sorterVerb.pp}e</em>).`;
     } else {
-      reason = `&lt;strong&gt;${sorterVerb.infinitive}&lt;/strong&gt; is not reflexive or Vandertramp, so it takes &lt;strong&gt;avoir&lt;/strong&gt; (e.g., &lt;em&gt;Il a ${sorterVerb.pp}&lt;/em&gt;).`;
+      reason = `<strong>${sorterVerb.infinitive}</strong> is not reflexive or Vandertramp, so it takes <strong>avoir</strong> (e.g., <em>Il a ${sorterVerb.pp}</em>).`;
     }
 
     if (correct) {
       sorterScore++;
       sorterStreak++;
       sorterFeedback.className = "feedback-box ok";
-      sorterFeedback.innerHTML = `‚úÖ &lt;strong&gt;Bravo!&lt;/strong&gt; ${reason}`;
+      sorterFeedback.innerHTML = `‚úÖ <strong>Bravo!</strong> ${reason}`;
     } else {
       sorterStreak = 0;
       sorterFeedback.className = "feedback-box err";
-      sorterFeedback.innerHTML = `‚ùå &lt;strong&gt;Pas tout √† fait!&lt;/strong&gt; ${reason}`;
+      sorterFeedback.innerHTML = `‚ùå <strong>Pas tout √† fait!</strong> ${reason}`;
     }
 
     document.getElementById("sorter-score").textContent = sorterScore;
@@ -345,8 +383,8 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     sorterNextBtn.classList.remove("hidden");
   }
 
-  document.getElementById("btn-choose-avoir").addEventListener("click", () =&gt; answerSorter("avoir"));
-  document.getElementById("btn-choose-etre").addEventListener("click", () =&gt; answerSorter("etre"));
+  document.getElementById("btn-choose-avoir").addEventListener("click", () => answerSorter("avoir"));
+  document.getElementById("btn-choose-etre").addEventListener("click", () => answerSorter("etre"));
   sorterNextBtn.addEventListener("click", nextSorterQuestion);
 
   // --- MODE 3: ATELIER DES ACCORDS (AGREEMENT BUILDER) ---
@@ -363,9 +401,9 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
 
   function nextAccordsQuestion() {
     // 70% √ätre/Reflexive agreement practice, 30% Avoir trap check (no agreement!)
-    const etreVerbs = VERBS.filter(v =&gt; v.aux === "etre");
-    const avoirVerbs = VERBS.filter(v =&gt; v.aux === "avoir" &amp;&amp; !v.impersonal);
-    const verb = Math.random() &lt; 0.7 ? randomItem(etreVerbs) : randomItem(avoirVerbs);
+    const etreVerbs = VERBS.filter(v => v.aux === "etre");
+    const avoirVerbs = VERBS.filter(v => v.aux === "avoir" && !v.impersonal);
+    const verb = Math.random() < 0.7 ? randomItem(etreVerbs) : randomItem(avoirVerbs);
     const chosen = randomItem(namedSubjects);
     const s = chosen.subj;
 
@@ -397,7 +435,7 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     }
     distractors.delete(correctForm);
 
-    const options = [correctForm, ...[...distractors].slice(0, 3)].sort(() =&gt; Math.random() - 0.5);
+    const options = [correctForm, ...[...distractors].slice(0, 3)].sort(() => Math.random() - 0.5);
     const optionsEl = document.getElementById("accords-options");
     const feedbackEl = document.getElementById("accords-feedback");
     const nextBtn = document.getElementById("accords-next");
@@ -405,34 +443,34 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     feedbackEl.classList.add("hidden");
     nextBtn.classList.add("hidden");
 
-    optionsEl.innerHTML = options.map(opt =&gt; `&lt;button class="option-choice"&gt;${opt}&lt;/button&gt;`).join("");
+    optionsEl.innerHTML = options.map(opt => `<button class="option-choice">${opt}</button>`).join("");
 
-    optionsEl.querySelectorAll(".option-choice").forEach(btn =&gt; {
-      btn.addEventListener("click", () =&gt; {
-        optionsEl.querySelectorAll(".option-choice").forEach(b =&gt; {
+    optionsEl.querySelectorAll(".option-choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        optionsEl.querySelectorAll(".option-choice").forEach(b => {
           b.disabled = true;
           if (b.textContent === correctForm) b.classList.add("correct");
         });
 
         let ruleNote = "";
         if (verb.aux === "avoir") {
-          ruleNote = `&lt;strong&gt;${verb.infinitive}&lt;/strong&gt; uses &lt;strong&gt;avoir&lt;/strong&gt;, so NEVER add &lt;em&gt;-e&lt;/em&gt; or &lt;em&gt;-s&lt;/em&gt; for the subject! Answer: &lt;strong&gt;${correctForm}&lt;/strong&gt;.`;
-        } else if (verb.pp.endsWith("s") &amp;&amp; !s.fem &amp;&amp; s.plural) {
-          ruleNote = `&lt;strong&gt;${verb.pp}&lt;/strong&gt; already ends in &lt;strong&gt;-s&lt;/strong&gt;, so masculine plural stays &lt;strong&gt;${verb.pp}&lt;/strong&gt;! Answer: &lt;strong&gt;${correctForm}&lt;/strong&gt;.`;
+          ruleNote = `<strong>${verb.infinitive}</strong> uses <strong>avoir</strong>, so NEVER add <em>-e</em> or <em>-s</em> for the subject! Answer: <strong>${correctForm}</strong>.`;
+        } else if (verb.pp.endsWith("s") && !s.fem && s.plural) {
+          ruleNote = `<strong>${verb.pp}</strong> already ends in <strong>-s</strong>, so masculine plural stays <strong>${verb.pp}</strong>! Answer: <strong>${correctForm}</strong>.`;
         } else {
-          ruleNote = `With &lt;strong&gt;√™tre&lt;/strong&gt;${verb.reflexive ? " (reflexive)" : ""}, agree with &lt;em&gt;${chosen.display}&lt;/em&gt; ‚Üí &lt;strong&gt;${correctForm}&lt;/strong&gt;.`;
+          ruleNote = `With <strong>√™tre</strong>${verb.reflexive ? " (reflexive)" : ""}, agree with <em>${chosen.display}</em> ‚Üí <strong>${correctForm}</strong>.`;
         }
 
         if (btn.textContent === correctForm) {
           accordsScore++;
           accordsStreak++;
           feedbackEl.className = "feedback-box ok";
-          feedbackEl.innerHTML = `‚úÖ &lt;strong&gt;Exactement!&lt;/strong&gt; ${ruleNote}`;
+          feedbackEl.innerHTML = `‚úÖ <strong>Exactement!</strong> ${ruleNote}`;
         } else {
           btn.classList.add("wrong");
           accordsStreak = 0;
           feedbackEl.className = "feedback-box err";
-          feedbackEl.innerHTML = `‚ùå &lt;strong&gt;Attention!&lt;/strong&gt; ${ruleNote}`;
+          feedbackEl.innerHTML = `‚ùå <strong>Attention!</strong> ${ruleNote}`;
         }
 
         document.getElementById("accords-score").textContent = accordsScore;
@@ -455,10 +493,16 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
   const quizFeedback = document.getElementById("quiz-feedback");
   const quizNextBtn = document.getElementById("quiz-next");
   const quizSubmitBtn = document.getElementById("quiz-submit");
+  const quizLengthSelect = document.getElementById("quiz-length-select");
+
+  if (quizLengthSelect) {
+    quizLengthSelect.addEventListener("change", startNewQuiz);
+  }
 
   function startNewQuiz() {
-    const shuffled = [...VERBS].sort(() =&gt; Math.random() - 0.5).slice(0, 10);
-    quizRound = shuffled.map(v =&gt; ({
+    const qCount = quizLengthSelect ? parseInt(quizLengthSelect.value, 10) : 10;
+    const shuffled = [...VERBS].sort(() => Math.random() - 0.5).slice(0, qCount);
+    quizRound = shuffled.map(v => ({
       verb: v,
       subj: v.impersonal ? SUBJECTS[4] : randomItem(SUBJECTS)
     }));
@@ -495,7 +539,7 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
       .replace(/\s+/g, " ");
   }
 
-  document.getElementById("quiz-form").addEventListener("submit", e =&gt; {
+  document.getElementById("quiz-form").addEventListener("submit", e => {
     e.preventDefault();
     if (quizAnswered) return;
     quizAnswered = true;
@@ -511,10 +555,10 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
       quizScore++;
       document.getElementById("quiz-score").textContent = quizScore;
       quizFeedback.className = "feedback-box ok";
-      quizFeedback.innerHTML = `‚úÖ &lt;strong&gt;Super!&lt;/strong&gt; &lt;em&gt;${expected}&lt;/em&gt;`;
+      quizFeedback.innerHTML = `‚úÖ <strong>Super!</strong> <em>${expected}</em>`;
     } else {
       quizFeedback.className = "feedback-box err";
-      quizFeedback.innerHTML = `‚ùå &lt;strong&gt;Bonne r√©ponse :&lt;/strong&gt; &lt;em&gt;${expected}&lt;/em&gt;`;
+      quizFeedback.innerHTML = `‚ùå <strong>Bonne r√©ponse :</strong> <em>${expected}</em>`;
     }
 
     quizFeedback.classList.remove("hidden");
@@ -523,15 +567,15 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
     quizNextBtn.focus();
   });
 
-  quizNextBtn.addEventListener("click", () =&gt; {
+  quizNextBtn.addEventListener("click", () => {
     quizIdx++;
-    if (quizIdx &gt;= quizRound.length) {
+    if (quizIdx >= quizRound.length) {
       document.getElementById("quiz-active-area").classList.add("hidden");
       document.getElementById("quiz-summary").classList.remove("hidden");
       document.getElementById("quiz-final-score").textContent = `${quizScore} / ${quizRound.length}`;
       document.getElementById("quiz-final-msg").textContent =
-        quizScore &gt;= 9 ? "Incroyable! Tu es un chef du pass√© compos√©! ü•ê" :
-        quizScore &gt;= 7 ? "Tr√®s bon travail! Continue comme √ßa! üéâ" :
+        quizScore >= 9 ? "Incroyable! Tu es un chef du pass√© compos√©! ü•ê" :
+        quizScore >= 7 ? "Tr√®s bon travail! Continue comme √ßa! üéâ" :
         "Bon effort! R√©vise les le√ßons et r√©essaie! üí™";
     } else {
       renderQuizQuestion();
@@ -542,8 +586,8 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
   document.getElementById("quiz-play-again").addEventListener("click", startNewQuiz);
 
   // Accent bar character insertion
-  document.querySelectorAll(".accent-btn").forEach(btn =&gt; {
-    btn.addEventListener("click", () =&gt; {
+  document.querySelectorAll(".accent-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
       if (quizInput.disabled) return;
       const char = btn.dataset.char;
       const start = quizInput.selectionStart;
@@ -563,4 +607,3 @@ bplist00—XUTI-Data—[public.htmlO^	<html><head><meta http-equiv="content-typ
   nextAccordsQuestion();
   startNewQuiz();
 });
-</body></html>     #                           ^0
