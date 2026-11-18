@@ -1561,3 +1561,525 @@ em {
   background: var(--bg-subtle);
   border-color: var(--card-border-hover);
 }
+
+/* =========================================
+   LE BISTRO RUSH (RESTAURANT SIMULATION)
+   ========================================= */
+
+/* Feature Showcase on Home Tab */
+.rush-callout-card {
+  background: #ffffff;
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--terracotta);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.rush-callout-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.rush-callout-left {
+  flex: 1;
+}
+
+.rush-badge {
+  display: inline-block;
+  background: var(--star-bg);
+  color: var(--star-ink);
+  border: 1px solid var(--star-border);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.rush-callout-left h3 {
+  font-size: 1.35rem;
+  color: var(--ink-primary);
+  margin-bottom: 0.4rem;
+}
+
+.rush-callout-left p {
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+
+.rush-callout-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  font-size: 0.88rem;
+  color: var(--ink-primary);
+}
+
+/* Rush Bar (Kitchen Top) */
+.rush-bar {
+  background: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.rush-bar-left, .rush-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shift-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.shift-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.croissant-jar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-warm-tint);
+  border: 1px solid var(--card-border);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.croissant-icon {
+  font-size: 1.1rem;
+}
+
+.croissant-val {
+  color: var(--terracotta);
+}
+
+.croissant-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.chef-rank-badge {
+  background: var(--terracotta-soft);
+  color: var(--terracotta-dark);
+  border: 1px solid var(--terracotta-border);
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Order Rail & Ticket */
+.order-rail {
+  background: #ede4d6;
+  border: 1px solid #d9ccb9;
+  border-bottom: 3px solid #b8a690;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 1.25rem 1.25rem 0;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.ticket-clip {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 22px;
+  background: linear-gradient(180deg, #d1baa0 0%, #b39b81 100%);
+  border: 1px solid #8e7a63;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(44, 36, 32, 0.2);
+  z-index: 5;
+}
+
+.clip-stud {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fdfaf5;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.order-ticket {
+  background: #fdfbf7;
+  border: 1px solid #dfd3c3;
+  box-shadow: 0 4px 14px rgba(44, 36, 32, 0.08);
+  padding: 1.75rem 2rem 1.5rem;
+  max-width: 580px;
+  width: 100%;
+  border-radius: 4px;
+  margin-top: 8px;
+  margin-bottom: -1px;
+  position: relative;
+  border-bottom: 2px dashed #d5c7b3;
+}
+
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.ticket-stamp {
+  font-family: 'Lora', serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--terracotta);
+  font-size: 1.05rem;
+  border: 1.5px solid var(--terracotta-border);
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.ticket-time {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.ticket-divider {
+  height: 1px;
+  background: #ecdccb;
+  margin-bottom: 0.85rem;
+}
+
+.ticket-client-quote {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  color: var(--ink-secondary);
+  font-size: 0.96rem;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+}
+
+.ticket-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.ticket-prompt {
+  font-family: 'Lora', serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1.25;
+}
+
+.ticket-meaning {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  margin-top: 0.25rem;
+}
+
+/* Prep Counter */
+.prep-counter {
+  background: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 2.25rem 1.75rem 2rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* The Ceramic Serving Plate */
+.plate-container {
+  background: var(--bg-warm-tint);
+  border: 2px solid #e7ded2;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  box-shadow: inset 0 2px 6px rgba(44, 36, 32, 0.04);
+}
+
+.sentence-assembly {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.sentence-subject, .sentence-object {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+.ingredient-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  height: 48px;
+  padding: 0.35rem 0.95rem;
+  border-radius: var(--radius-sm);
+  font-family: 'Lora', serif;
+  font-size: 1.22rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.ingredient-slot.slot-empty {
+  border: 2px dashed #cfc2af;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-muted);
+}
+
+.ingredient-slot.slot-empty .slot-placeholder {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.ingredient-slot.slot-empty:hover {
+  border-color: var(--terracotta);
+  background: #ffffff;
+}
+
+.ingredient-slot.slot-filled {
+  border: 2px solid var(--terracotta);
+  background: #ffffff;
+  color: var(--terracotta-dark);
+  box-shadow: 0 2px 6px rgba(184, 83, 51, 0.15);
+}
+
+.ingredient-slot.slot-filled:hover::after {
+  content: " ✕";
+  font-size: 0.8rem;
+  color: var(--etre-ink);
+  margin-left: 0.35rem;
+}
+
+/* Shelves Container */
+.shelves-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.shelf-block {
+  background: var(--bg-page);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.shelf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.shelf-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.shelf-hint {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+
+.shelf-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+.shelf-btn {
+  background: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 0.85rem 0.65rem;
+  font-family: 'Lora', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.shelf-btn:hover {
+  border-color: var(--terracotta);
+  background: var(--bg-subtle);
+  transform: translateY(-2px);
+}
+
+.shelf-btn.is-selected {
+  border-color: var(--terracotta);
+  background: var(--terracotta-soft);
+  color: var(--terracotta-dark);
+  box-shadow: 0 0 0 2px var(--terracotta-border);
+}
+
+/* Counter Actions & Brass Bell Button */
+.counter-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-bell {
+  background: linear-gradient(180deg, #d89f41 0%, #b8832a 100%);
+  color: #ffffff;
+  border: 1px solid #996916;
+  box-shadow: 0 3px 8px rgba(181, 128, 37, 0.35);
+  font-family: 'Lora', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  letter-spacing: 0.01em;
+}
+
+.btn-bell:hover:not(:disabled) {
+  background: linear-gradient(180deg, #e3ab4b 0%, #c48e31 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(181, 128, 37, 0.45);
+}
+
+.btn-bell:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-bell:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-bell .bell-icon {
+  font-size: 1.35rem;
+}
+
+/* Feedback Card */
+.rush-feedback-card {
+  background: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--shadow-md);
+  margin-top: 1.25rem;
+}
+
+.rush-feedback-card.ok-feedback {
+  border-left: 4px solid var(--sage-ink);
+  background: linear-gradient(180deg, #ffffff 0%, var(--sage-bg) 100%);
+}
+
+.rush-feedback-card.err-feedback {
+  border-left: 4px solid var(--etre-ink);
+  background: linear-gradient(180deg, #ffffff 0%, var(--etre-bg) 100%);
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-status-badge {
+  font-family: 'Lora', serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.feedback-text {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--ink-primary);
+  margin-bottom: 1.25rem;
+}
+
+.feedback-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.shift-trophy {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Mobile responsive for rush */
+@media (max-width: 768px) {
+  .rush-callout-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .rush-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .shelves-container {
+    grid-template-columns: 1fr;
+  }
+  .counter-actions {
+    flex-direction: column-reverse;
+  }
+  .btn-bell, #rush-clear-plate {
+    width: 100%;
+    justify-content: center;
+  }
+  .sentence-assembly {
+    flex-direction: column;
+  }
+}

@@ -54,7 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.querySelectorAll("[data-goto]").forEach(btn => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.goto));
+    btn.addEventListener("click", () => {
+      switchTab(btn.dataset.goto);
+      if (btn.dataset.rush) {
+        const rushBtn = document.querySelector(".mode-btn[data-mode='rush']");
+        if (rushBtn) rushBtn.click();
+      }
+    });
   });
 
   // --- Progress UI ---
@@ -757,7 +763,683 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+
+  // =========================================
+  // --- MODE: LE BISTRO RUSH SIMULATION ---
+  // =========================================
+
+  // Web Audio Synthesizer
+  let audioCtx = null;
+  let soundEnabled = true;
+
+  function initAudio() {
+    if (!audioCtx && typeof window !== "undefined") {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  function playBellChime() {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      [880, 1760, 3520].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now);
+        const amp = idx === 0 ? 0.3 : idx === 1 ? 0.15 : 0.06;
+        gain.gain.setValueAtTime(amp, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (idx === 0 ? 1.4 : 0.8));
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 1.4);
+      });
+    } catch (e) {
+      console.warn("Audio bell error:", e);
+    }
+  }
+
+  function playPlateClack() {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.06);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    } catch (e) {
+      console.warn("Audio clack error:", e);
+    }
+  }
+
+  function playCheerChime() {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + i * 0.1);
+        gain.gain.setValueAtTime(0.2, now + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.6);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 0.65);
+      });
+    } catch (e) {
+      console.warn("Audio cheer error:", e);
+    }
+  }
+
+  function playErrorMurmur() {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.35);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.36);
+    } catch (e) {
+      console.warn("Audio error error:", e);
+    }
+  }
+
+  const RUSH_SHIFTS = [
+    {
+      id: 1,
+      title: "Service 1 : Le Matin (Petit-Déjeuner)",
+      orders: [
+        {
+          table: "TABLE 1",
+          time: "08h15",
+          guest: "« Un étudiant pressé s'arrête au comptoir avant son cours : »",
+          subject: "Marc",
+          verbInfinitive: "boire",
+          object: "un bon café au lait.",
+          meaning: "to drink (avoir)",
+          correctAux: "a",
+          correctPP: "bu",
+          auxOptions: ["a", "est", "as", "ont"],
+          ppOptions: ["bu", "bue", "bus", "bois"],
+          explanation: "<strong>Boire</strong> utilise l'auxiliaire <strong>avoir</strong> (Marc <strong>a</strong>) et son participe passé irrégulier est <strong>bu</strong>. Pas d'accord avec le sujet !"
+        },
+        {
+          table: "TABLE 2",
+          time: "08h45",
+          guest: "« Une famille nombreuse s'installe pour le brunch : »",
+          subject: "Les enfants (m. pl.)",
+          verbInfinitive: "manger",
+          object: "des croissants chauds au beurre.",
+          meaning: "to eat (avoir)",
+          correctAux: "ont",
+          correctPP: "mangé",
+          auxOptions: ["ont", "sont", "avons", "a"],
+          ppOptions: ["mangé", "mangée", "mangés", "manger"],
+          explanation: "Règle d'or du passé composé : avec <strong>avoir</strong>, le participe passé (<strong>mangé</strong>) ne s'accorde JAMAIS avec le sujet, même s'il est pluriel !"
+        },
+        {
+          table: "TABLE 3",
+          time: "09h05",
+          guest: "« Le serveur crie la commande vers la cuisine : »",
+          subject: "La serveuse",
+          verbInfinitive: "prendre",
+          object: "la commande de la terrasse.",
+          meaning: "to take (avoir)",
+          correctAux: "a",
+          correctPP: "pris",
+          auxOptions: ["a", "est", "ont", "s'est"],
+          ppOptions: ["pris", "prise", "prit", "prendu"],
+          explanation: "<strong>Prendre</strong> fait <strong>a pris</strong> au passé composé avec l'auxiliaire avoir."
+        },
+        {
+          table: "TABLE 4",
+          time: "09h30",
+          guest: "« Les habitués de la cabane à sucre commandent : »",
+          subject: "Nous",
+          verbInfinitive: "vouloir",
+          object: "du sirop d'érable avec nos crêpes.",
+          meaning: "to want (avoir)",
+          correctAux: "avons",
+          correctPP: "voulu",
+          auxOptions: ["avons", "sommes", "avez", "ont"],
+          ppOptions: ["voulu", "voulus", "voulue", "voulut"],
+          explanation: "<strong>Vouloir</strong> se conjugue avec <strong>avoir</strong> : <em>Nous avons voulu</em>. Aucun accord en nombre ou en genre !"
+        },
+        {
+          table: "TABLE 5",
+          time: "10h00",
+          guest: "« Ton collègue commis rentre du marché matinal : »",
+          subject: "Tu",
+          verbInfinitive: "acheter",
+          object: "des bagels frais ce matin.",
+          meaning: "to buy (avoir)",
+          correctAux: "as",
+          correctPP: "acheté",
+          auxOptions: ["as", "es", "a", "avez"],
+          ppOptions: ["acheté", "achetée", "achetés", "achète"],
+          explanation: "Verbe régulier en -er : <em>Tu as acheté</em>. L'auxiliaire est <strong>avoir</strong>."
+        },
+        {
+          table: "TABLE 6",
+          time: "10h30",
+          guest: "« Le chef boulanger sort ses créations dorées : »",
+          subject: "Le chef",
+          verbInfinitive: "faire",
+          object: "des baguettes bien croustillantes.",
+          meaning: "to make / do (avoir)",
+          correctAux: "a",
+          correctPP: "fait",
+          auxOptions: ["a", "est", "ont", "s'est"],
+          ppOptions: ["fait", "faite", "faits", "faisez"],
+          explanation: "<strong>Faire</strong> fait <strong>a fait</strong> au passé composé avec l'auxiliaire avoir."
+        }
+      ]
+    },
+    {
+      id: 2,
+      title: "Service 2 : Le Midi (Déjeuner)",
+      orders: [
+        {
+          table: "TABLE 7",
+          time: "12h10",
+          guest: "« Une cliente pressée s'en va rapidement : »",
+          subject: "Sophie (f. sing.)",
+          verbInfinitive: "partir",
+          object: "sans son parapluie.",
+          meaning: "to leave (DR & MRS VANDERTRAMP)",
+          correctAux: "est",
+          correctPP: "partie",
+          auxOptions: ["est", "a", "s'est", "sont"],
+          ppOptions: ["partie", "parti", "parties", "partis"],
+          explanation: "<strong>Partir</strong> est un verbe de mouvement (DR & MRS VANDERTRAMP) : auxiliaire <strong>être</strong> + accord obligatoire avec Sophie (fém. sing. = <em>-e</em>) !"
+        },
+        {
+          table: "TABLE 8",
+          time: "12h35",
+          guest: "« Mes cousins de Gatineau arrivent au bistro : »",
+          subject: "Mes cousins (m. pl.)",
+          verbInfinitive: "venir",
+          object: "dîner sur la terrasse du bistro.",
+          meaning: "to come (DR & MRS VANDERTRAMP)",
+          correctAux: "sont",
+          correctPP: "venus",
+          auxOptions: ["sont", "ont", "sommes", "est"],
+          ppOptions: ["venus", "venu", "venues", "venue"],
+          explanation: "<strong>Venir</strong> se conjugue avec <strong>être</strong> et s'accorde au masculin pluriel (<em>-s</em>) : <em>Mes cousins sont venus</em>."
+        },
+        {
+          table: "TABLE 9",
+          time: "13h00",
+          guest: "« Deux voyageuses terminent leur déjeuner gourmand : »",
+          subject: "Les clientes (f. pl.)",
+          verbInfinitive: "aller",
+          object: "au festival après le repas.",
+          meaning: "to go (DR & MRS VANDERTRAMP)",
+          correctAux: "sont",
+          correctPP: "allées",
+          auxOptions: ["sont", "ont", "sommes", "est"],
+          ppOptions: ["allées", "allé", "allée", "allés"],
+          explanation: "<strong>Aller</strong> prend <strong>être</strong> et s'accorde avec le sujet féminin pluriel (<em>-es</em>) : <em>Elles sont allées</em>."
+        },
+        {
+          table: "TABLE 10",
+          time: "13h20",
+          guest: "« Lucas quitte sa table pour féliciter la brigade : »",
+          subject: "Lucas (m. sing.)",
+          verbInfinitive: "sortir",
+          object: "saluer le chef en cuisine.",
+          meaning: "to go out (DR & MRS VANDERTRAMP)",
+          correctAux: "est",
+          correctPP: "sorti",
+          auxOptions: ["est", "a", "s'est", "sont"],
+          ppOptions: ["sorti", "sortie", "sortis", "sorties"],
+          explanation: "<strong>Sortir</strong> (DR & MRS VANDERTRAMP) prend <strong>être</strong> : <em>Lucas est sorti</em> (masculin singulier)."
+        },
+        {
+          table: "TABLE 11",
+          time: "13h45",
+          guest: "« Notre cliente fidèle fête son anniversaire au restaurant : »",
+          subject: "Elle (f. sing.)",
+          verbInfinitive: "devenir",
+          object: "notre cliente la plus fidèle.",
+          meaning: "to become (DR & MRS VANDERTRAMP)",
+          correctAux: "est",
+          correctPP: "devenue",
+          auxOptions: ["est", "a", "s'est", "sont"],
+          ppOptions: ["devenue", "devenu", "devenues", "devenus"],
+          explanation: "<strong>Devenir</strong> (changement d'état) prend <strong>être</strong> avec accord au féminin singulier (<em>-e</em>) : <em>Elle est devenue</em>."
+        },
+        {
+          table: "TABLE 12",
+          time: "14h15",
+          guest: "« Attention au piège du midi ! Le gérant prépare la terrasse : »",
+          subject: "Le gérant",
+          verbInfinitive: "ouvrir",
+          object: "la grande baie vitrée ensoleillée.",
+          meaning: "to open (Attention : Avoir !)",
+          correctAux: "a",
+          correctPP: "ouvert",
+          auxOptions: ["a", "est", "s'est", "ont"],
+          ppOptions: ["ouvert", "ouverte", "ouverts", "ouvertes"],
+          explanation: "Attention au piège classique ! <strong>Ouvrir</strong> n'est PAS un verbe de mouvement VANDERTRAMP. Il prend <strong>avoir</strong> (<em>a ouvert</em>), donc aucun accord !"
+        }
+      ]
+    },
+    {
+      id: 3,
+      title: "Service 3 : Le Soir (Le Coup de Feu)",
+      orders: [
+        {
+          table: "TABLE 13",
+          time: "18h30",
+          guest: "« Les premiers convives de la soirée prennent place : »",
+          subject: "Les invités (m. pl.)",
+          verbInfinitive: "s'asseoir",
+          object: "près de la cheminée.",
+          meaning: "to sit down (Réflexif • Être)",
+          correctAux: "se sont",
+          correctPP: "assis",
+          auxOptions: ["se sont", "ont", "sont", "s'ont"],
+          ppOptions: ["assis", "assise", "assises", "assit"],
+          explanation: "<strong>S'asseoir</strong> est pronominal (100% <strong>être</strong>). Au masculin pluriel, comme <em>assis</em> se termine déjà par un -s, on ne rajoute RIEN : <em>se sont assis</em> !"
+        },
+        {
+          table: "TABLE 14",
+          time: "19h15",
+          guest: "« Deux amies d'enfance s'assoient au comptoir : »",
+          subject: "Marie et Clara (f. pl.)",
+          verbInfinitive: "s'asseoir",
+          object: "au comptoir du chef.",
+          meaning: "to sit down (Réflexif féminin pluriel)",
+          correctAux: "se sont",
+          correctPP: "assises",
+          auxOptions: ["se sont", "sont", "ont", "s'ont"],
+          ppOptions: ["assises", "assis", "assise", "assisez"],
+          explanation: "Pour le féminin pluriel, <em>assis</em> prend le féminin <em>-e</em> puis le pluriel <em>-s</em> : <strong>Marie et Clara se sont assises</strong> !"
+        },
+        {
+          table: "TABLE 15",
+          time: "20h00",
+          guest: "« La musique en direct commence dans la salle : »",
+          subject: "Tous les clients (m. pl.)",
+          verbInfinitive: "se taire*",
+          object: "pour écouter le pianiste.",
+          meaning: "to be quiet (Verbe étoilé * • Réflexif)",
+          correctAux: "se sont",
+          correctPP: "tus",
+          auxOptions: ["se sont", "sont", "ont", "se ont"],
+          ppOptions: ["tus", "tu", "tue", "tues"],
+          explanation: "Verbe étoilé ! <strong>Se taire*</strong> est réflexif (auxiliaire être) et son participe passé est <em>tu</em>. Au masculin pluriel : <em>Ils se sont tus</em> !"
+        },
+        {
+          table: "TABLE 16",
+          time: "20h45",
+          guest: "« L'artiste du quartier décore notre panneau : »",
+          subject: "L'artiste",
+          verbInfinitive: "peindre",
+          object: "le menu du soir sur l'ardoise.",
+          meaning: "to paint (avoir)",
+          correctAux: "a",
+          correctPP: "peint",
+          auxOptions: ["a", "est", "s'est", "ont"],
+          ppOptions: ["peint", "peinte", "peints", "peignit"],
+          explanation: "<strong>Peindre</strong> prend l'auxiliaire <strong>avoir</strong> et son participe passé est <strong>peint</strong> (terminaison en -t). Pas d'accord avec le sujet."
+        },
+        {
+          table: "TABLE 17",
+          time: "21h15",
+          guest: "« La table d'honneur commande le plat traditionnel : »",
+          subject: "Le chef",
+          verbInfinitive: "cuire",
+          object: "une magnifique tourtière québécoise.",
+          meaning: "to cook / bake (avoir)",
+          correctAux: "a",
+          correctPP: "cuit",
+          auxOptions: ["a", "est", "ont", "s'est"],
+          ppOptions: ["cuit", "cuite", "cuits", "cuisez"],
+          explanation: "<strong>Cuire</strong> prend l'auxiliaire avoir : <em>Le chef a cuit</em> (participe passé en -t). Pas d'accord avec le sujet !"
+        },
+        {
+          table: "TABLE 18",
+          time: "21h45",
+          guest: "« Dernière commande pour le dessert spécial de la maison : »",
+          subject: "Nous",
+          verbInfinitive: "cueillir*",
+          object: "des pommes fraîches pour la tarte.",
+          meaning: "to pick / gather (Verbe étoilé * • Avoir)",
+          correctAux: "avons",
+          correctPP: "cueilli",
+          auxOptions: ["avons", "sommes", "avez", "ont"],
+          ppOptions: ["cueilli", "cueillis", "cueillie", "cueillu"],
+          explanation: "Verbe étoilé ! <strong>Cueillir*</strong> prend <strong>avoir</strong> et se termine en <strong>-i</strong> (<em>cueilli</em>). Pas d'accord au pluriel avec le sujet !"
+        }
+      ]
+    }
+  ];
+
+  const CROISSANTS_STORAGE_KEY = "bistroRushCroissants";
+  let rushCroissants = parseInt(localStorage.getItem(CROISSANTS_STORAGE_KEY) || "0", 10);
+  let rushCurrentShiftId = 1;
+  let rushOrderIdx = 0;
+  let rushShiftScore = 0;
+  let selectedAux = null;
+  let selectedPP = null;
+
+  function getChefRank(tips) {
+    if (tips >= 40) return "Chef Étoilé du Café 🌟";
+    if (tips >= 25) return "Sous-Chef du Bistro ⭐";
+    if (tips >= 15) return "Chef de Partie 🍳";
+    if (tips >= 6) return "Commis de Cuisine 🥐";
+    return "Plongeur du Bistro 🫧";
+  }
+
+  function updateRushStatsUI() {
+    const rank = getChefRank(rushCroissants);
+    const countEl = document.getElementById("rush-croissants-count");
+    const rankEl = document.getElementById("rush-chef-rank");
+    const homeTipsEl = document.getElementById("home-rush-tips");
+    const homeRankEl = document.getElementById("home-rush-rank");
+
+    if (countEl) countEl.textContent = rushCroissants;
+    if (rankEl) rankEl.textContent = rank;
+    if (homeTipsEl) homeTipsEl.textContent = rushCroissants;
+    if (homeRankEl) homeRankEl.textContent = rank;
+  }
+
+  function saveRushTips(add) {
+    rushCroissants += add;
+    localStorage.setItem(CROISSANTS_STORAGE_KEY, rushCroissants.toString());
+    updateRushStatsUI();
+  }
+
+  function getCurrentShift() {
+    return RUSH_SHIFTS.find(s => s.id === rushCurrentShiftId) || RUSH_SHIFTS[0];
+  }
+
+  function getCurrentOrder() {
+    const shift = getCurrentShift();
+    return shift.orders[rushOrderIdx];
+  }
+
+  function loadRushOrder(idx) {
+    const shift = getCurrentShift();
+    rushOrderIdx = idx;
+    const order = shift.orders[rushOrderIdx];
+    if (!order) return;
+
+    selectedAux = null;
+    selectedPP = null;
+
+    document.getElementById("rush-order-num").textContent = `${rushOrderIdx + 1} / ${shift.orders.length}`;
+    document.getElementById("ticket-table-name").textContent = order.table;
+    document.getElementById("ticket-time-stamp").textContent = `Service de ${order.time}`;
+    document.getElementById("ticket-client-quote").textContent = order.guest;
+    document.getElementById("ticket-prompt").textContent = `${order.subject} + ${order.verbInfinitive.toUpperCase()}`;
+    document.getElementById("ticket-meaning").textContent = order.meaning;
+
+    document.getElementById("plate-subject").textContent = order.subject;
+    document.getElementById("plate-object").textContent = order.object;
+
+    const slotAux = document.getElementById("slot-aux");
+    slotAux.className = "ingredient-slot slot-empty";
+    slotAux.querySelector(".slot-placeholder").style.display = "inline";
+    slotAux.querySelector(".slot-val").textContent = "";
+
+    const slotPP = document.getElementById("slot-pp");
+    slotPP.className = "ingredient-slot slot-empty";
+    slotPP.querySelector(".slot-placeholder").style.display = "inline";
+    slotPP.querySelector(".slot-val").textContent = "";
+
+    const shelfAux = document.getElementById("shelf-aux-items");
+    const shuffledAux = [...order.auxOptions].sort(() => Math.random() - 0.5);
+    shelfAux.innerHTML = shuffledAux.map(opt => `
+      <button class="shelf-btn" data-type="aux" data-val="${opt}">${opt}</button>
+    `).join("");
+
+    const shelfPP = document.getElementById("shelf-pp-items");
+    const shuffledPP = [...order.ppOptions].sort(() => Math.random() - 0.5);
+    shelfPP.innerHTML = shuffledPP.map(opt => `
+      <button class="shelf-btn" data-type="pp" data-val="${opt}">${opt}</button>
+    `).join("");
+
+    shelfAux.querySelectorAll(".shelf-btn").forEach(btn => {
+      btn.addEventListener("click", () => selectIngredient("aux", btn.dataset.val));
+    });
+    shelfPP.querySelectorAll(".shelf-btn").forEach(btn => {
+      btn.addEventListener("click", () => selectIngredient("pp", btn.dataset.val));
+    });
+
+    document.getElementById("rush-serve-btn").disabled = true;
+    document.getElementById("rush-feedback-area").classList.add("hidden");
+    document.getElementById("rush-shift-summary").classList.add("hidden");
+  }
+
+  function selectIngredient(type, val) {
+    playPlateClack();
+    if (type === "aux") {
+      selectedAux = val;
+      const slot = document.getElementById("slot-aux");
+      slot.className = "ingredient-slot slot-filled";
+      slot.querySelector(".slot-placeholder").style.display = "none";
+      slot.querySelector(".slot-val").textContent = val;
+
+      document.querySelectorAll("#shelf-aux-items .shelf-btn").forEach(b => {
+        b.classList.toggle("is-selected", b.dataset.val === val);
+      });
+    } else if (type === "pp") {
+      selectedPP = val;
+      const slot = document.getElementById("slot-pp");
+      slot.className = "ingredient-slot slot-filled";
+      slot.querySelector(".slot-placeholder").style.display = "none";
+      slot.querySelector(".slot-val").textContent = val;
+
+      document.querySelectorAll("#shelf-pp-items .shelf-btn").forEach(b => {
+        b.classList.toggle("is-selected", b.dataset.val === val);
+      });
+    }
+
+    const canServe = selectedAux !== null && selectedPP !== null;
+    document.getElementById("rush-serve-btn").disabled = !canServe;
+  }
+
+  function clearPlate() {
+    playPlateClack();
+    selectedAux = null;
+    selectedPP = null;
+
+    const slotAux = document.getElementById("slot-aux");
+    slotAux.className = "ingredient-slot slot-empty";
+    slotAux.querySelector(".slot-placeholder").style.display = "inline";
+    slotAux.querySelector(".slot-val").textContent = "";
+
+    const slotPP = document.getElementById("slot-pp");
+    slotPP.className = "ingredient-slot slot-empty";
+    slotPP.querySelector(".slot-placeholder").style.display = "inline";
+    slotPP.querySelector(".slot-val").textContent = "";
+
+    document.querySelectorAll(".shelf-btn").forEach(b => b.classList.remove("is-selected"));
+    document.getElementById("rush-serve-btn").disabled = true;
+  }
+
+  document.getElementById("slot-aux").addEventListener("click", () => {
+    if (selectedAux) {
+      selectedAux = null;
+      const slot = document.getElementById("slot-aux");
+      slot.className = "ingredient-slot slot-empty";
+      slot.querySelector(".slot-placeholder").style.display = "inline";
+      slot.querySelector(".slot-val").textContent = "";
+      document.querySelectorAll("#shelf-aux-items .shelf-btn").forEach(b => b.classList.remove("is-selected"));
+      document.getElementById("rush-serve-btn").disabled = true;
+      playPlateClack();
+    }
+  });
+
+  document.getElementById("slot-pp").addEventListener("click", () => {
+    if (selectedPP) {
+      selectedPP = null;
+      const slot = document.getElementById("slot-pp");
+      slot.className = "ingredient-slot slot-empty";
+      slot.querySelector(".slot-placeholder").style.display = "inline";
+      slot.querySelector(".slot-val").textContent = "";
+      document.querySelectorAll("#shelf-pp-items .shelf-btn").forEach(b => b.classList.remove("is-selected"));
+      document.getElementById("rush-serve-btn").disabled = true;
+      playPlateClack();
+    }
+  });
+
+  document.getElementById("rush-clear-plate").addEventListener("click", clearPlate);
+
+  function serveOrder() {
+    const order = getCurrentOrder();
+    if (!order || !selectedAux || !selectedPP) return;
+
+    const isAuxCorrect = selectedAux === order.correctAux;
+    const isPPCorrect = selectedPP === order.correctPP;
+    const isSuccess = isAuxCorrect && isPPCorrect;
+
+    document.querySelectorAll(".shelf-btn").forEach(b => b.disabled = true);
+    document.getElementById("rush-serve-btn").disabled = true;
+
+    const feedbackArea = document.getElementById("rush-feedback-area");
+    const statusBadge = document.getElementById("rush-feedback-status");
+    const msgEl = document.getElementById("rush-feedback-msg");
+
+    const fullSentence = `${order.subject} ${order.correctAux} ${order.correctPP} ${order.object}`;
+
+    if (isSuccess) {
+      playBellChime();
+      rushShiftScore++;
+      saveRushTips(2);
+
+      feedbackArea.className = "rush-feedback-card ok-feedback";
+      statusBadge.textContent = "🛎️ Ding! Commande Parfaite! (+2 🥐)";
+      msgEl.innerHTML = `
+        <strong>Bravo Chef!</strong> Les clients se régalent : <em>« ${fullSentence} »</em><br><br>
+        ${order.explanation}
+      `;
+    } else {
+      playErrorMurmur();
+      feedbackArea.className = "rush-feedback-card err-feedback";
+      statusBadge.textContent = "⚠️ Oups! Retour en cuisine";
+
+      let tipNote = "";
+      if (!isAuxCorrect && !isPPCorrect) {
+        tipNote = `L'auxiliaire attendu était <strong>${order.correctAux}</strong> et le participe passé <strong>${order.correctPP}</strong>.`;
+      } else if (!isAuxCorrect) {
+        tipNote = `Le participe passé était bon, mais l'auxiliaire attendu était <strong>${order.correctAux}</strong>.`;
+      } else {
+        tipNote = `L'auxiliaire était bon, mais attention à l'accord du participe : <strong>${order.correctPP}</strong> !`;
+      }
+
+      msgEl.innerHTML = `
+        ${tipNote}<br><br>
+        Recette correcte : <em>« ${fullSentence} »</em><br><br>
+        ${order.explanation}
+      `;
+    }
+
+    document.getElementById("rush-listen-btn").onclick = (e) => {
+      e.stopPropagation();
+      speakFrench(fullSentence);
+    };
+
+    feedbackArea.classList.remove("hidden");
+  }
+
+  document.getElementById("rush-serve-btn").addEventListener("click", serveOrder);
+
+  function nextRushOrder() {
+    const shift = getCurrentShift();
+    if (rushOrderIdx + 1 < shift.orders.length) {
+      loadRushOrder(rushOrderIdx + 1);
+    } else {
+      playCheerChime();
+      document.getElementById("rush-feedback-area").classList.add("hidden");
+      document.getElementById("rush-shift-summary").classList.remove("hidden");
+
+      const scoreEl = document.getElementById("rush-shift-score");
+      const badgeEl = document.getElementById("rush-shift-badge");
+      const tipsEarnedEl = document.getElementById("rush-tips-earned");
+
+      scoreEl.textContent = `${rushShiftScore} / ${shift.orders.length}`;
+
+      const isPerfect = rushShiftScore === shift.orders.length;
+      if (isPerfect) {
+        saveRushTips(3);
+        badgeEl.textContent = "🌟 Service Étoilé (Bonus +3 🥐)!";
+        tipsEarnedEl.textContent = `Score parfait! Tu as gagné ${rushShiftScore * 2 + 3} croissants de pourboire!`;
+      } else {
+        badgeEl.textContent = rushShiftScore >= 4 ? "Très bon service!" : "Service d'apprentissage";
+        tipsEarnedEl.textContent = `Tu as gagné ${rushShiftScore * 2} croissants de pourboire lors de ce service.`;
+      }
+    }
+  }
+
+  document.getElementById("rush-next-btn").addEventListener("click", nextRushOrder);
+
+  const shiftSelect = document.getElementById("rush-shift-select");
+  if (shiftSelect) {
+    shiftSelect.addEventListener("change", () => {
+      rushCurrentShiftId = parseInt(shiftSelect.value, 10);
+      rushShiftScore = 0;
+      loadRushOrder(0);
+    });
+  }
+
+  document.getElementById("rush-replay-shift-btn").addEventListener("click", () => {
+    rushShiftScore = 0;
+    loadRushOrder(0);
+  });
+
+  document.getElementById("rush-next-shift-btn").addEventListener("click", () => {
+    rushCurrentShiftId = (rushCurrentShiftId % RUSH_SHIFTS.length) + 1;
+    if (shiftSelect) shiftSelect.value = rushCurrentShiftId.toString();
+    rushShiftScore = 0;
+    loadRushOrder(0);
+  });
+
+  const soundToggleBtn = document.getElementById("rush-sound-toggle");
+  if (soundToggleBtn) {
+    soundToggleBtn.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      soundToggleBtn.textContent = soundEnabled ? "🔔 Son : Oui" : "🔕 Son : Non";
+    });
+  }
   // --- Initialize App ---
+  updateRushStatsUI();
+  loadRushOrder(0);
   updateProgressUI();
   renderVerbGrid();
   buildFlashcardDeck();

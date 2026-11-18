@@ -62,6 +62,26 @@
         </div>
       </div>
 
+      <!-- Bistro Rush Feature Showcase -->
+      <div class="rush-callout-card" data-goto="pratique" data-rush="true">
+        <div class="rush-callout-left">
+          <span class="rush-badge">Nouveau Jeu : Restaurant Simulation</span>
+          <h3>🍽️ Le Bistro Rush — Prends les Commandes!</h3>
+          <p>
+            Rejoins la brigade du Café du Passé Composé! Enfile ton tablier de chef, reçois les bons de commande des clients,
+            et assemble les recettes verbales en choisissant le bon auxiliaire et les accords parfaits pour remporter des pourboires en croissants.
+          </p>
+          <div class="rush-callout-stats">
+            <span>🥐 <strong id="home-rush-tips">0</strong> Croissants</span>
+            <span class="score-divider">•</span>
+            <span>⭐ Rang : <strong id="home-rush-rank">Plongeur du Bistro</strong></span>
+          </div>
+        </div>
+        <div class="rush-callout-right">
+          <button class="btn btn-primary btn-lg" data-goto="pratique" data-rush="true">Prendre son Service 🥐 →</button>
+        </div>
+      </div>
+
       <div class="quick-grid">
         <div class="info-card">
           <span class="pill pill-avoir">42 Verbs</span>
@@ -253,15 +273,166 @@
       </div>
 
       <div class="mode-tabs">
-        <button class="mode-btn active" data-mode="flashcards">Cartes Éclair</button>
+        <button class="mode-btn active" data-mode="rush">🥐 Le Bistro Rush</button>
+        <button class="mode-btn" data-mode="flashcards">Cartes Éclair</button>
         <button class="mode-btn" data-mode="sorter">Avoir ou Être?</button>
         <button class="mode-btn" data-mode="accords">L'Atelier des Accords</button>
         <button class="mode-btn" data-mode="quiz">Quiz Tapé</button>
         <button class="mode-btn" data-mode="blitz">Défi Blitz 60s</button>
       </div>
 
+      <!-- MODE: LE BISTRO RUSH (RESTAURANT SIMULATION) -->
+      <div id="mode-rush" class="practice-panel active">
+        <!-- Rush Kitchen Bar -->
+        <div class="rush-bar">
+          <div class="rush-bar-left">
+            <div class="shift-selector-wrap">
+              <label for="rush-shift-select" class="shift-label">Service :</label>
+              <select id="rush-shift-select" class="select-input">
+                <option value="1">Service 1 : Le Matin (Avoir - 6 Commandes)</option>
+                <option value="2">Service 2 : Le Midi (Vandertramp &amp; Irréguliers - 6 Commandes)</option>
+                <option value="3">Service 3 : Le Coup de Feu du Soir (Pronominaux &amp; Étoilés - 6 Commandes)</option>
+              </select>
+            </div>
+            <span class="score-divider">•</span>
+            <span>Commande : <strong id="rush-order-num">1 / 6</strong></span>
+          </div>
+          <div class="rush-bar-right">
+            <div class="croissant-jar">
+              <span class="croissant-icon">🥐</span>
+              <span id="rush-croissants-count" class="croissant-val">0</span>
+              <span class="croissant-label">croissants</span>
+            </div>
+            <span class="chef-rank-badge" id="rush-chef-rank">Commis de Cuisine</span>
+            <button id="rush-sound-toggle" class="btn-icon-sm" title="Activer / Désactiver les sons du bistro" aria-label="Activer / Désactiver les sons">🔔 Son : Oui</button>
+          </div>
+        </div>
+
+        <!-- The Kitchen Board -->
+        <div class="rush-kitchen">
+          <!-- Ticket Rail -->
+          <div class="order-rail">
+            <div class="ticket-clip">
+              <div class="clip-stud"></div>
+              <div class="clip-body"></div>
+            </div>
+
+            <div class="order-ticket" id="rush-ticket">
+              <div class="ticket-top">
+                <span class="ticket-stamp" id="ticket-table-name">TABLE 4</span>
+                <span class="ticket-time" id="ticket-time-stamp">Service de 12h15</span>
+              </div>
+              <div class="ticket-divider"></div>
+              <div class="ticket-client-quote" id="ticket-client-quote">
+                « Deux étudiantes montréalaises s'installent en terrasse. »
+              </div>
+              <div class="ticket-order-main">
+                <span class="ticket-label">COMMANDE EN CUISINE :</span>
+                <div class="ticket-prompt" id="ticket-prompt">
+                  Marie et Sophie (f. pl.) + VENIR déjeuner
+                </div>
+                <div class="ticket-meaning" id="ticket-meaning">
+                  (to come • DR &amp; MRS VANDERTRAMP)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- The Kitchen Prep Counter -->
+          <div class="prep-counter">
+            <div class="plate-container">
+              <div class="plate-rim">
+                <div class="plate-base">
+                  <div class="sentence-assembly">
+                    <span class="sentence-subject" id="plate-subject">Marie et Sophie</span>
+
+                    <!-- Slot 1: Auxiliaire -->
+                    <div class="ingredient-slot slot-empty" id="slot-aux" role="button" tabindex="0" title="Cliquer pour retirer">
+                      <span class="slot-placeholder">Choisir l'auxiliaire</span>
+                      <span class="slot-val"></span>
+                    </div>
+
+                    <!-- Slot 2: Participe Passé -->
+                    <div class="ingredient-slot slot-empty" id="slot-pp" role="button" tabindex="0" title="Cliquer pour retirer">
+                      <span class="slot-placeholder">Choisir le participe passé</span>
+                      <span class="slot-val"></span>
+                    </div>
+
+                    <span class="sentence-object" id="plate-object">déjeuner au bistro.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ingredient Shelves -->
+            <div class="shelves-container">
+              <!-- Shelf 1: Auxiliaire -->
+              <div class="shelf-block">
+                <div class="shelf-header">
+                  <span class="shelf-title">1. Ingrédient Auxiliaire</span>
+                  <span class="shelf-hint">Avoir ou Être?</span>
+                </div>
+                <div class="shelf-items" id="shelf-aux-items">
+                  <!-- Generated dynamically -->
+                </div>
+              </div>
+
+              <!-- Shelf 2: Participe Passé -->
+              <div class="shelf-block">
+                <div class="shelf-header">
+                  <span class="shelf-title">2. Ingrédient Participe Passé</span>
+                  <span class="shelf-hint">Accorder avec le sujet?</span>
+                </div>
+                <div class="shelf-items" id="shelf-pp-items">
+                  <!-- Generated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Counter -->
+            <div class="counter-actions">
+              <button id="rush-clear-plate" class="btn btn-outline">Effacer l'assiette</button>
+              <button id="rush-serve-btn" class="btn btn-bell" disabled>
+                <span class="bell-icon">🔔</span>
+                <span>Servir la Commande!</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feedback & Review Balloon -->
+          <div id="rush-feedback-area" class="rush-feedback-card hidden">
+            <div class="feedback-header">
+              <span id="rush-feedback-status" class="feedback-status-badge">✅ Commande Validée!</span>
+              <button id="rush-listen-btn" class="btn-icon-sm" title="Écouter la commande">🔊 Écouter la phrase</button>
+            </div>
+            <p id="rush-feedback-msg" class="feedback-text"></p>
+            <div class="feedback-footer">
+              <button id="rush-next-btn" class="btn btn-primary">Commande Suivante →</button>
+            </div>
+          </div>
+
+          <!-- Shift Completed Summary -->
+          <div id="rush-shift-summary" class="game-card text-center hidden">
+            <div class="shift-trophy">🏆</div>
+            <h3 id="rush-summary-title">Service Terminé!</h3>
+            <p class="muted-sub" id="rush-summary-sub">Félicitations Chef! Voici le bilan de ton service :</p>
+            <div class="progress-ring-row" style="justify-content: center; margin: 1rem 0;">
+              <span id="rush-shift-score" class="big-stat">6 / 6</span>
+              <span class="stat-badge" id="rush-shift-badge">Service Impeccable!</span>
+            </div>
+            <p id="rush-tips-earned" style="font-weight: 600; color: var(--terracotta); margin-bottom: 1.5rem;">
+              +12 🥐 pourboires collectés!
+            </p>
+            <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+              <button id="rush-next-shift-btn" class="btn btn-primary">Passer au Service Suivant →</button>
+              <button id="rush-replay-shift-btn" class="btn btn-secondary">Rejouer ce Service</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Mode 1: Flashcards -->
-      <div id="mode-flashcards" class="practice-panel active">
+      <div id="mode-flashcards" class="practice-panel">
         <div class="practice-controls">
           <label for="fc-deck-select">Deck:</label>
           <select id="fc-deck-select" class="select-input">
